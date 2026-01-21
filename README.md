@@ -66,4 +66,4 @@ If you choose to build on it, you are responsible for maintaining and adapting i
 
 ## Contact
 
-[![Discord](https://img.shields.io/badge/Discord-Moonzy-5865F2?style=for-the-badge&logo=discord)](https://discord.com/users/1237327253520515134)
+[![Discord](https://img.shields.io/badge/Discord-binninwl_-5865F2?style=for-the-badge&logo=discord)](https://discord.com/users/1237327253520515134)
