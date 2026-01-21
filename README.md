@@ -47,7 +47,8 @@ Updates may still happen occasionally, but there is no fixed roadmap or planned 
 - Working Auto-Execution
 - Vectored-ExceptionHandler
 - TCP Communications
-
+- Fixed Namecall hooks
+  
 ---
 
 ## Notes
