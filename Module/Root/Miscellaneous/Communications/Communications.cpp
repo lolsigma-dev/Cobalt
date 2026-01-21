@@ -1,0 +1,103 @@
+#pragma once
+#define WIN32_LEAN_AND_MEAN
+#include "Communications.hpp"
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "Ws2_32.lib")
+
+
+inline void(__fastcall* luaprintf)(std::int32_t, const char*, ...) =
+reinterpret_cast<void(__fastcall*)(std::int32_t, const char*, ...)>(ROBLOX::Print);
+
+#define PORT "2304"
+
+bool recvAll(SOCKET sock, char* buffer, int totalBytes) {
+    int received = 0;
+    while (received < totalBytes) {
+        int result = recv(sock, buffer + received, totalBytes - received, 0);
+        if (result <= 0) return false;
+        received += result;
+    }
+    return true;
+}
+
+void ServerThread() {
+    WSADATA wsaData;
+    struct addrinfo* result = nullptr, hints = {};
+    SOCKET ListenSocket = INVALID_SOCKET, ClientSocket = INVALID_SOCKET;
+
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) return;
+
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+    hints.ai_flags = AI_PASSIVE;
+
+    if (getaddrinfo(nullptr, PORT, &hints, &result) != 0) {
+        WSACleanup();
+        return;
+    }
+
+    ListenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+    if (ListenSocket == INVALID_SOCKET) {
+        freeaddrinfo(result);
+        WSACleanup();
+        return;
+    }
+
+    if (bind(ListenSocket, result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR) {
+        closesocket(ListenSocket);
+        freeaddrinfo(result);
+        WSACleanup();
+        return;
+    }
+
+    freeaddrinfo(result);
+
+    if (listen(ListenSocket, SOMAXCONN) == SOCKET_ERROR) {
+        closesocket(ListenSocket);
+        WSACleanup();
+        return;
+    }
+
+    luaprintf(1, "[COBALT->TCP] Listening on port " PORT "...");
+
+    while (true) {
+        ClientSocket = accept(ListenSocket, nullptr, nullptr);
+        if (ClientSocket == INVALID_SOCKET) continue;
+
+        uint32_t scriptSizeNet = 0;
+        if (!recvAll(ClientSocket, reinterpret_cast<char*>(&scriptSizeNet), 4)) {
+            closesocket(ClientSocket);
+            continue;
+        }
+
+        uint32_t scriptSize = ntohl(scriptSizeNet);
+        if (scriptSize == 0 || scriptSize > 10 * 1024 * 1024) {
+            closesocket(ClientSocket);
+            continue;
+        }
+
+        std::vector<char> buffer(scriptSize + 1, 0);
+        if (!recvAll(ClientSocket, buffer.data(), scriptSize)) {
+            closesocket(ClientSocket);
+            continue;
+        }
+
+        std::string receivedScript(buffer.data(), scriptSize);
+        if (Globals::ExecutorThread) {
+            Execution->SendScript(Globals::ExecutorThread, receivedScript);
+        }
+        else {
+            luaprintf(3, "[COBALT->TCP] Failed to execute: no valid lua_State");
+        }
+        closesocket(ClientSocket);
+    }
+
+    closesocket(ListenSocket);
+    WSACleanup();
+}
+
+void CCommunications::Initialize() {
+    ServerThread();
+}
