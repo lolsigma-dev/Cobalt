@@ -2,8 +2,8 @@
 #include <Includes.hpp>
 #include <Framework/Environment.hpp>
 
-class CScript {
+class CConsole {
 public:
 	static void InitLib(lua_State* L);
 };
-inline auto ScriptLibrary = std::make_unique<CScript>();
+inline auto Console = std::make_unique<CConsole>();

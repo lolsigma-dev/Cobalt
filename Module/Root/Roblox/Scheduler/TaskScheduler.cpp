@@ -18,6 +18,7 @@ bool CTaskScheduler::Init()
     uintptr_t SC = Scheduler->ScriptContext(DM);
     lua_State* RobloxState = Scheduler->LuaState(SC);
 
+    Globals::RobloxThread = RobloxState;
     Globals::ExecutorThread = lua_newthread(RobloxState);
     Scheduler->SetThreadCaps(Globals::ExecutorThread, 8, Capabilities);
     Environment->Initialize(Globals::ExecutorThread);

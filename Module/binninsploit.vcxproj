@@ -254,6 +254,12 @@
     <ClCompile Include="Root\Workspace\Framework\Modules\HTTP\HTTP.cpp" />
     <ClCompile Include="Root\Workspace\Framework\Modules\Input\Input.cpp" />
     <ClCompile Include="Root\Workspace\Framework\Modules\Script\Script.cpp" />
+    <ClCompile Include="Root\Workspace\Framework\Modules\Misc\Misc.cpp" />
+    <ClCompile Include="Root\Workspace\Framework\Modules\Crypt\Crypt.cpp" />
+    <ClCompile Include="Root\Workspace\Framework\Modules\Console\Console.cpp" />
+    <ClCompile Include="Root\Workspace\Framework\Modules\DebugEx\DebugEx.cpp" />
+    <ClCompile Include="Root\Workspace\Framework\Modules\Drawing\Drawing.cpp" />
+    <ClCompile Include="Root\Workspace\Framework\Modules\WebSocket\WebSocket.cpp" />
     <ClCompile Include="Root\Workspace\TPService\Handler.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -570,6 +576,7 @@
     <ClInclude Include="Dependencies\Webview\WebView2Loader.h" />
     <ClInclude Include="Root\Engine\Encryptions.hpp" />
     <ClInclude Include="Root\Engine\Engine.hpp" />
+    <ClInclude Include="Root\Engine\Offsets.hpp" />
     <ClInclude Include="Root\Engine\LuaVM.hpp" />
     <ClInclude Include="Root\Engine\Structs\VMValues.hpp" />
     <ClInclude Include="Root\Miscellaneous\Bytecode\Bytecode.hpp" />
@@ -592,6 +599,12 @@
     <ClInclude Include="Root\Workspace\Framework\Modules\HTTP\HTTP.hpp" />
     <ClInclude Include="Root\Workspace\Framework\Modules\Input\Input.hpp" />
     <ClInclude Include="Root\Workspace\Framework\Modules\Script\Script.hpp" />
+    <ClInclude Include="Root\Workspace\Framework\Modules\Misc\Misc.hpp" />
+    <ClInclude Include="Root\Workspace\Framework\Modules\Crypt\Crypt.hpp" />
+    <ClInclude Include="Root\Workspace\Framework\Modules\Console\Console.hpp" />
+    <ClInclude Include="Root\Workspace\Framework\Modules\DebugEx\DebugEx.hpp" />
+    <ClInclude Include="Root\Workspace\Framework\Modules\Drawing\Drawing.hpp" />
+    <ClInclude Include="Root\Workspace\Framework\Modules\WebSocket\WebSocket.hpp" />
     <ClInclude Include="Root\Workspace\TPService\Handler.hpp" />
   </ItemGroup>
   <ItemGroup>
