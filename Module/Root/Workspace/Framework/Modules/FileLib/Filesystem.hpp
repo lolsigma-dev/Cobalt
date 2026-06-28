@@ -1,15 +1,21 @@
 #pragma once
 #include "Includes.hpp"
+#include <Globals.hpp>
 
-inline std::filesystem::path a = getenv("LOCALAPPDATA");
-inline std::filesystem::path b = a / "Cobalt";
-inline std::filesystem::path c = b / "workspace";
+inline std::string DefaultWorkspaceDirectory() {
+    std::filesystem::path base = getenv("LOCALAPPDATA");
+    std::filesystem::path dir = base / "Cobalt" / "workspace";
+    if (!std::filesystem::exists(dir)) {
+        std::filesystem::create_directories(dir);
+    }
+    return dir.string() + "\\";
+}
 
 inline std::string WorkspaceDirectory() {
-    if (!std::filesystem::exists(c)) {
-        std::filesystem::create_directories(c);
+    if (!Globals::WorkspaceFolder.empty()) {
+        return Globals::WorkspaceFolder;
     }
-    return c.string() + "\\";
+    return DefaultWorkspaceDirectory();
 }
 
 __forceinline void _SplitString(std::string Str, std::string By, std::vector<std::string>& Tokens) {

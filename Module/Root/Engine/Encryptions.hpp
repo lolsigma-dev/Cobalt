@@ -1,22 +1,17 @@
 #pragma once
-#include "Structs/VMValues.hpp"
+#include <Roblox/EncryptionsHelper.hpp>
 
-#define PROTO_LINEINFO_ENC LUAVMValue2
-#define PROTO_ABSLINEINFO_ENC LUAVMValue1
-#define PROTO_LOCVARS_ENC LUAVMValue4
-#define PROTO_UPVALUES_ENC LUAVMValue1
-#define PROTO_SOURCE_ENC LUAVMValue1
-
-#define PROTO_DEBUGINSN_ENC LUAVMValue2
-#define PROTO_DEBUGNAME_ENC LUAVMValue4
-#define PROTO_TYPEINFO_ENC LUAVMValue4
-#define PROTO_USERDATA_ENC LUAVMValue3
-
-#define LSTATE_STACKSIZE_ENC LUAVMValue2
-
-#define CLOSURE_CONT_ENC LUAVMValue4
-#define CLOSURE_DEBUGNAME_ENC LUAVMValue3
-
-#define UDATA_META_ENC LUAVMValue4
-
-#define TSTRING_HASH_ENC LUAVMValue3
+#define PROTO_LINEINFO_ENC     VMValue1
+#define PROTO_LOCVARS_ENC      VMValue4
+#define PROTO_UPVALUES_ENC     VMValue2
+#define PROTO_DEBUGINSN_ENC    VMValue4
+#define PROTO_TYPEINFO_ENC     VMValue3
+#define PROTO_SOURCE_ENC       VMValue1
+#define PROTO_ABSLINEINFO_ENC  VMValue4
+#define PROTO_DEBUGNAME_ENC    VMValue4
+#define PROTO_USERDATA_ENC     VMValue1
+#define UDATA_META_ENC         VMValue1
+#define CLOSURE_DEBUGNAME_ENC  VMValue4
+#define CLOSURE_CONT_ENC       VMValue3
+#define TSTRING_HASH_ENC       VMValue1
+#define LSTATE_STACKSIZE_ENC   VMValue3

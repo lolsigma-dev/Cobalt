@@ -1,103 +1,101 @@
 #pragma once
 #define WIN32_LEAN_AND_MEAN
 #include "Communications.hpp"
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#pragma comment(lib, "Ws2_32.lib")
+#include <string>
+#include <vector>
+#include <thread>
+#include <windows.h>
+#include <cryptopp/base64.h>
+#include <cryptopp/filters.h>
 
+constexpr const char* VELOCITY_PIPE_PREFIX = "\\\\.\\pipe\\uoQcySKXSUxxJNpVQyatpHQwYoGfhcbh_";
 
 inline void(__fastcall* luaprintf)(std::int32_t, const char*, ...) =
-reinterpret_cast<void(__fastcall*)(std::int32_t, const char*, ...)>(ROBLOX::Print);
+    reinterpret_cast<void(__fastcall*)(std::int32_t, const char*, ...)>(ROBLOX::Print);
 
-#define PORT "2304"
-
-bool recvAll(SOCKET sock, char* buffer, int totalBytes) {
-    int received = 0;
-    while (received < totalBytes) {
-        int result = recv(sock, buffer + received, totalBytes - received, 0);
-        if (result <= 0) return false;
-        received += result;
+static std::string Base64Decode(const std::string& encoded) {
+    std::string decoded;
+    try {
+        CryptoPP::StringSource ss(encoded, true,
+            new CryptoPP::Base64Decoder(
+                new CryptoPP::StringSink(decoded)
+            )
+        );
+    } catch (...) {
+        return {};
     }
-    return true;
+    return decoded;
 }
 
-void ServerThread() {
-    WSADATA wsaData;
-    struct addrinfo* result = nullptr, hints = {};
-    SOCKET ListenSocket = INVALID_SOCKET, ClientSocket = INVALID_SOCKET;
+void NamedPipeServer() {
+    DWORD pid = GetCurrentProcessId();
+    std::string pipeName = VELOCITY_PIPE_PREFIX + std::to_string(pid);
 
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) return;
-
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
-    hints.ai_flags = AI_PASSIVE;
-
-    if (getaddrinfo(nullptr, PORT, &hints, &result) != 0) {
-        WSACleanup();
-        return;
-    }
-
-    ListenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-    if (ListenSocket == INVALID_SOCKET) {
-        freeaddrinfo(result);
-        WSACleanup();
-        return;
-    }
-
-    if (bind(ListenSocket, result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR) {
-        closesocket(ListenSocket);
-        freeaddrinfo(result);
-        WSACleanup();
-        return;
-    }
-
-    freeaddrinfo(result);
-
-    if (listen(ListenSocket, SOMAXCONN) == SOCKET_ERROR) {
-        closesocket(ListenSocket);
-        WSACleanup();
-        return;
-    }
-
-    luaprintf(1, "[COBALT->TCP] Listening on port " PORT "...");
+    luaprintf(1, "[COBALT->VELOCITY] Pipe: %s", pipeName.c_str());
 
     while (true) {
-        ClientSocket = accept(ListenSocket, nullptr, nullptr);
-        if (ClientSocket == INVALID_SOCKET) continue;
+        HANDLE hPipe = CreateNamedPipeA(
+            pipeName.c_str(),
+            PIPE_ACCESS_INBOUND,
+            PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+            PIPE_UNLIMITED_INSTANCES,
+            0,
+            0x100000,
+            0,
+            nullptr
+        );
 
-        uint32_t scriptSizeNet = 0;
-        if (!recvAll(ClientSocket, reinterpret_cast<char*>(&scriptSizeNet), 4)) {
-            closesocket(ClientSocket);
+        if (hPipe == INVALID_HANDLE_VALUE) {
+            Sleep(100);
             continue;
         }
 
-        uint32_t scriptSize = ntohl(scriptSizeNet);
-        if (scriptSize == 0 || scriptSize > 10 * 1024 * 1024) {
-            closesocket(ClientSocket);
-            continue;
+        if (!ConnectNamedPipe(hPipe, nullptr)) {
+            if (GetLastError() != ERROR_PIPE_CONNECTED) {
+                CloseHandle(hPipe);
+                continue;
+            }
         }
 
-        std::vector<char> buffer(scriptSize + 1, 0);
-        if (!recvAll(ClientSocket, buffer.data(), scriptSize)) {
-            closesocket(ClientSocket);
-            continue;
+        std::string fullData;
+        char tempBuf[4096];
+        DWORD bytesRead = 0;
+
+        while (ReadFile(hPipe, tempBuf, sizeof(tempBuf), &bytesRead, nullptr) && bytesRead > 0) {
+            fullData.append(tempBuf, bytesRead);
         }
 
-        std::string receivedScript(buffer.data(), scriptSize);
-        if (Globals::ExecutorThread) {
-            Execution->SendScript(Globals::ExecutorThread, receivedScript);
+        if (!fullData.empty()) {
+            size_t end = fullData.find_last_not_of("\r\n\0");
+            if (end != std::string::npos)
+                fullData.erase(end + 1);
+
+            std::string decoded = Base64Decode(fullData);
+
+            if (!decoded.empty()) {
+                const std::string wsPrefix = "setworkspacefolder: ";
+                if (decoded.find(wsPrefix) == 0) {
+                    Globals::WorkspaceFolder = decoded.substr(wsPrefix.length());
+                    std::replace(Globals::WorkspaceFolder.begin(), Globals::WorkspaceFolder.end(), '\\', '/');
+                    while (!Globals::WorkspaceFolder.empty() && Globals::WorkspaceFolder.back() == '/')
+                        Globals::WorkspaceFolder.pop_back();
+                    Globals::WorkspaceFolder += '/';
+                    luaprintf(1, "[COBALT->VELOCITY] Workspace set: %s", Globals::WorkspaceFolder.c_str());
+                } else {
+                    if (Globals::ExecutorThread) {
+                        Execution->SendScript(Globals::ExecutorThread, decoded);
+                    } else {
+                        luaprintf(3, "[COBALT->VELOCITY] No valid lua_State");
+                    }
+                }
+            }
         }
-        else {
-            luaprintf(3, "[COBALT->TCP] Failed to execute: no valid lua_State");
-        }
-        closesocket(ClientSocket);
+
+        DisconnectNamedPipe(hPipe);
+        CloseHandle(hPipe);
     }
-
-    closesocket(ListenSocket);
-    WSACleanup();
 }
 
 void CCommunications::Initialize() {
-    ServerThread();
+    std::thread(NamedPipeServer).detach();
 }

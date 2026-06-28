@@ -1,15 +1,12 @@
 #pragma once
-#include <thread>
+#include <string>
 #include <cstdint>
 #include "Engine.hpp"
-#include <string>
 #include <Execution/Execution.hpp>
-class CCommunications {
-private:
 
+class CCommunications {
 public:
 	static void Initialize();
-	static void Setup();
 };
 
 inline auto Communication = std::make_unique<CCommunications>();

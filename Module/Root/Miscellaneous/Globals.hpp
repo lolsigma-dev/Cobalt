@@ -8,4 +8,5 @@ namespace Globals {
     inline lua_State* ExecutorThread;
     inline bool Initialized = false;
     inline std::queue<std::function<void()>> YIELDPackets;
+    inline std::string WorkspaceFolder;
 }
