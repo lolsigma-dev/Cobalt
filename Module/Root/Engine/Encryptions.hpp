@@ -1,5 +1,5 @@
 #pragma once
-#include "Roblox/EncryptionsHelper.hpp"
+#include "EncryptionsHelper.hpp"
 
 #define PROTO_LINEINFO_ENC     VMValue1
 #define PROTO_LOCVARS_ENC      VMValue4
